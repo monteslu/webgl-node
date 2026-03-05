@@ -30,6 +30,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Debug native-gles
+        run: |
+          node -e "const gl = require('native-gles'); console.log('createContext:', gl.createContext(64,64)); console.log('info:', gl.getContextInfo()); gl.destroyContext(); console.log('native-gles OK')"
+          node -e "import('native-gles').then(m => { const gl = m.default; console.log('ESM createContext:', gl.createContext(64,64)); console.log('info:', gl.getContextInfo()); gl.destroyContext(); console.log('ESM OK') })"
+        env:
+          EGL_PLATFORM: surfaceless
+
       - name: Run tests
         run: |
           node test/test-triangle.mjs
