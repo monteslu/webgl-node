@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -25,7 +25,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgles2
+          sudo apt-get install -y libegl1-mesa libgles2-mesa
 
       - name: Install dependencies
         run: npm install
@@ -36,5 +36,3 @@ jobs:
           node test/test-all.mjs
         env:
           EGL_PLATFORM: surfaceless
-          MESA_GL_VERSION_OVERRIDE: 3.3
-          LIBGL_ALWAYS_SOFTWARE: 1
