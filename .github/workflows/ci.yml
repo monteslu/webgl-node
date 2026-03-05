@@ -25,14 +25,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1-mesa-dev libgles2-mesa-dev mesa-utils
-
-      - name: Install native-gles
-        run: |
-          cd ..
-          git clone https://github.com/monteslu/native-gles.git || true
-          cd native-gles
-          npm install
+          sudo apt-get install -y libegl1-mesa libgles2-mesa
 
       - name: Install dependencies
         run: npm install

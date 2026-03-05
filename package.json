@@ -24,7 +24,7 @@
     "node"
   ],
   "dependencies": {
-    "native-gles": "^0.3.0"
+    "native-gles": "^0.3.1"
   },
   "author": "Luis Montes",
   "license": "MIT"
