@@ -10,7 +10,14 @@ export function createWebGL2Context(width, height, opts = {}) {
   const canvas = createMockCanvas(width, height, ctx)
   ctx.canvas = canvas
 
-  return { canvas, gl: ctx }
+  const result = { canvas, gl: ctx }
+
+  // Expose swapBuffers when using a window surface (native window or fbdev)
+  if (opts.nativeWindow || opts.windowSurface) {
+    result.swapBuffers = () => gl.swapBuffers()
+  }
+
+  return result
 }
 
 export { WebGL2RenderingContext }

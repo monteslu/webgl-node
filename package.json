@@ -23,9 +23,9 @@
     "three.js",
     "node"
   ],
-  "dependencies": {
-    "native-gles": "^0.3.1"
-  },
   "author": "Luis Montes",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "native-gles": "^0.4.0"
+  }
 }
