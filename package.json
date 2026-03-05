@@ -19,5 +19,6 @@
     "native-gles": "file:../native-gles",
     "three": "^0.183.2"
   },
+  "author": "Luis Montes",
   "license": "MIT"
 }
