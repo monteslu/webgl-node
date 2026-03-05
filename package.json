@@ -1,0 +1,23 @@
+{
+  "name": "webgl-node",
+  "version": "0.1.0",
+  "description": "WebGL2 implementation for Node.js on top of native-gles",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "scripts": {
+    "test": "node test/test-triangle.mjs && node test/test-all.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monteslu/webgl-node.git"
+  },
+  "keywords": ["webgl", "webgl2", "opengl", "gles", "gpu", "three.js", "node"],
+  "dependencies": {
+    "native-gles": "file:../native-gles",
+    "three": "^0.183.2"
+  },
+  "license": "MIT"
+}
