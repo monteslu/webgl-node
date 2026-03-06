@@ -1,6 +1,6 @@
 {
   "name": "webgl-node",
-  "version": "0.4444.0",
+  "version": "1.0.0",
   "description": "WebGL2 implementation for Node.js on top of native-gles",
   "type": "module",
   "main": "index.mjs",
