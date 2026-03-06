@@ -12,10 +12,11 @@ export function createWebGL2Context(width, height, opts = {}) {
 
   const result = { canvas, gl: ctx }
 
-  // Expose swapBuffers and setSwapInterval when using a window surface
+  // Expose swapBuffers, setSwapInterval, makeCurrent when using a window surface
   if (opts.nativeWindow || opts.windowSurface) {
     result.swapBuffers = () => gl.swapBuffers()
     result.setSwapInterval = gl.setSwapInterval ? (interval) => gl.setSwapInterval(interval) : null
+    result.makeCurrent = gl.makeCurrent ? () => gl.makeCurrent() : null
   }
 
   return result
