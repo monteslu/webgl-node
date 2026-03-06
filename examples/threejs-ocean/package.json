@@ -1,0 +1,17 @@
+{
+  "name": "threejs-ocean",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "three.js Ocean demo with Sky shader, Water, and textured objects",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@kmamal/sdl": "^0.11.0",
+    "sharp": "^0.33.0",
+    "three": "^0.170.0",
+    "webgl-node": "^1.1.0"
+  }
+}

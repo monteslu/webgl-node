@@ -102,6 +102,40 @@ The returned `canvas` object supports:
 
 This is sufficient for libraries like three.js that probe canvas properties during initialization.
 
+## Rendering to a Window with SDL
+
+For on-screen rendering, pair with [@kmamal/sdl](https://github.com/nicksrandall/kmamal-sdl). Create an SDL window with `opengl: true` and pass its native GL handle:
+
+```js
+import sdl from '@kmamal/sdl'
+import { createWebGL2Context } from 'webgl-node'
+
+const win = sdl.video.createWindow({ title: 'My App', width: 800, height: 600, opengl: true })
+
+const { canvas, gl, swapBuffers, makeCurrent } = createWebGL2Context(800, 600, {
+  nativeWindow: win.native.gl,
+})
+
+// Re-assert EGL context after SDL init
+if (makeCurrent) makeCurrent()
+
+// Render loop
+setInterval(() => {
+  gl.clearColor(0.2, 0.3, 0.4, 1.0)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  swapBuffers()
+}, 16)
+
+win.on('close', () => process.exit(0))
+```
+
+When `nativeWindow` (or `windowSurface`) is provided, `createWebGL2Context` also returns:
+- `swapBuffers()` — present the frame
+- `setSwapInterval(n)` — set vsync (1 = on, 0 = off)
+- `makeCurrent()` — re-assert the EGL context (call after SDL init and after library setup)
+
+See [`examples/`](examples/) for complete demos using three.js with SDL.
+
 ## Notes
 
 - Runs on EGL pbuffer (offscreen) — no window or display required
