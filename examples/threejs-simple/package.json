@@ -9,8 +9,8 @@
     "start": "node index.mjs"
   },
   "dependencies": {
-    "@kmamal/sdl": "^0.11.0",
-    "three": "^0.170.0",
-    "webgl-node": "^1.1.0"
+    "@kmamal/sdl": "^0.11.13",
+    "three": "^0.184.0",
+    "webgl-node": "^1.2.0"
   }
 }

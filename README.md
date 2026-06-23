@@ -143,6 +143,7 @@ See [`examples/`](examples/) for complete demos using three.js with SDL.
 - WebGL-specific pixel store params (`UNPACK_FLIP_Y_WEBGL`, `UNPACK_PREMULTIPLY_ALPHA_WEBGL`) are tracked in JS
 - `getParameter` returns proper WebGL wrapper objects for binding queries
 - `getUniform` introspects the uniform type to return the correct typed array
+- `texImage2D` and `texSubImage2D` accept the Image/Canvas source form; pixels are read back via the source's `getContext('2d')` (or a temp canvas for an `Image`), so the source must expose a 2D context
 
 ## License
 
