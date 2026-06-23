@@ -203,8 +203,8 @@ scene.add(crate)
 
 const torusGeo = new THREE.TorusKnotGeometry(12, 3.5, 128, 32)
 const torusMat = new THREE.MeshPhongMaterial({
-  color: 0xcc8844,
-  specular: 0xffffcc,
+  color: 0x8833cc,
+  specular: 0xeeccff,
   shininess: 300,
 })
 const torusKnot = new THREE.Mesh(torusGeo, torusMat)
