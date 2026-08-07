@@ -48,6 +48,16 @@ Creates an EGL pbuffer context and returns:
 
 - `canvas` — Mock canvas object compatible with libraries that expect `canvas.getContext('webgl2')`
 - `gl` — Full `WebGL2RenderingContext` instance
+- `ctxId` — The native-gles context handle backing this context
+- `makeCurrent()` — Make **this** context current before rendering
+- `destroy()` — Destroy this context (and only this one)
+
+native-gles is multi-context: each `createWebGL2Context` call creates an
+independent EGL context with its own object namespace, and every returned
+function is bound to it. In a process with more than one context (several
+carts, a compositor and a cart, …) each consumer must call its own
+`makeCurrent()` before rendering — whoever rendered last owns the current
+context otherwise, and draws land in the wrong context silently.
 
 ### `WebGL2RenderingContext`
 
@@ -131,8 +141,16 @@ win.on('close', () => process.exit(0))
 
 When `nativeWindow` (or `windowSurface`) is provided, `createWebGL2Context` also returns:
 - `swapBuffers()` — present the frame
-- `setSwapInterval(n)` — set vsync (1 = on, 0 = off)
-- `makeCurrent()` — re-assert the EGL context (call after SDL init and after library setup)
+- `setSwapInterval(n)` — set vsync (1 = on, 0 = off). On macOS this drives
+  `CAMetalLayer.displaySyncEnabled` through native-gles (ANGLE's own
+  `eglSwapInterval` is a no-op there).
+
+`makeCurrent()` and `destroy()` are returned for every context, window or
+pbuffer — see above.
+
+On macOS pass `win.native.handle` (an `NSView*`); native-gles resolves it to
+the view's backing `CALayer` for ANGLE's Metal backend and keeps its
+`contentsScale` synced to the display the window is on.
 
 See [`examples/`](examples/) for complete demos using three.js with SDL.
 
