@@ -26,6 +26,6 @@
   "author": "Luis Montes",
   "license": "MIT",
   "dependencies": {
-    "native-gles": "^0.5.0"
+    "native-gles": "^0.6.0"
   }
 }
