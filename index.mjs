@@ -24,6 +24,31 @@ export function createWebGL2Context(width, height, opts = {}) {
   result.makeCurrent = gl.makeCurrent ? () => gl.makeCurrent(id) : null
   result.destroy = () => gl.destroyContext(id)
 
+  /**
+   * Follow a surface size change.
+   *
+   * `drawingBufferWidth`/`Height` are cached from creation, so after a window
+   * resize (or going fullscreen) they still report the ORIGINAL size — and any
+   * caller that sizes a viewport or a blit from them draws into a rect built
+   * for the old window, which puts the picture in a corner. There is no event
+   * to hook: the owner of the window has to say so.
+   *
+   * Updates the cached size, and resizes the underlying pbuffer when the
+   * context is offscreen (native-gles treats resizeContext as a no-op while a
+   * window surface is attached, since a window surface tracks its own window).
+   */
+  result.resize = (width, height) => {
+    const w = Math.max(1, width | 0)
+    const h = Math.max(1, height | 0)
+    if (gl.resizeContext) {
+      try { gl.resizeContext(w, h, id) } catch { /* window surfaces refuse; size cache still updates */ }
+    }
+    ctx._width = w
+    ctx._height = h
+    if (canvas) { canvas.width = w; canvas.height = h }
+    return true
+  }
+
   if (opts.nativeWindow || opts.windowSurface) {
     result.swapBuffers = () => gl.swapBuffers(id)
     result.setSwapInterval = gl.setSwapInterval ? (interval) => gl.setSwapInterval(interval, id) : null
