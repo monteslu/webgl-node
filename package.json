@@ -8,7 +8,7 @@
     ".": "./index.mjs"
   },
   "scripts": {
-    "test": "node test/test-triangle.mjs && node test/test-all.mjs"
+    "test": "node test/test-triangle.mjs && node test/test-all.mjs && node test/test-window-attach.mjs"
   },
   "repository": {
     "type": "git",

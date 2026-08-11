@@ -29,6 +29,28 @@ export function createWebGL2Context(width, height, opts = {}) {
     result.setSwapInterval = gl.setSwapInterval ? (interval) => gl.setSwapInterval(interval, id) : null
   }
 
+  // attachWindow/detachWindow are NOT gated on the opts above: their whole
+  // purpose is to turn a context that was created as a pbuffer into one that
+  // presents to a real window, so requiring the window opts up front would
+  // exclude exactly the caller who needs them. A consumer that renders
+  // offscreen and LATER acquires a window handle (a playtest window opening
+  // over an already-running GL cart) can now present by GPU blit + swap
+  // instead of round-tripping frames through glReadPixels and a software blit.
+  //
+  // Once attached, the context IS a window surface, so swapBuffers has to
+  // exist even though the opts branch above did not create it.
+  if (gl.attachWindow) {
+    result.attachWindow = (handle) => {
+      const ok = gl.attachWindow(handle, id)
+      if (ok && !result.swapBuffers) {
+        result.swapBuffers = () => gl.swapBuffers(id)
+        result.setSwapInterval = gl.setSwapInterval ? (interval) => gl.setSwapInterval(interval, id) : null
+      }
+      return ok
+    }
+  }
+  if (gl.detachWindow) result.detachWindow = () => gl.detachWindow(id)
+
   return result
 }
 
