@@ -51,6 +51,13 @@ Creates an EGL pbuffer context and returns:
 - `ctxId` — The native-gles context handle backing this context
 - `makeCurrent()` — Make **this** context current before rendering
 - `destroy()` — Destroy this context (and only this one)
+- `attachWindow(handle)` — Bind this context to a native window handle, turning
+  a pbuffer context into one that presents to that window. Returns `false` if
+  the bind is refused (the context is left untouched and still usable
+  offscreen). On success `swapBuffers`/`setSwapInterval` become available even
+  if the context was created without the window opts below.
+- `detachWindow()` — Release the window surface and return to offscreen
+  rendering. Returns `false` if not attached.
 
 native-gles is multi-context: each `createWebGL2Context` call creates an
 independent EGL context with its own object namespace, and every returned
@@ -147,6 +154,34 @@ When `nativeWindow` (or `windowSurface`) is provided, `createWebGL2Context` also
 
 `makeCurrent()` and `destroy()` are returned for every context, window or
 pbuffer — see above.
+
+#### Attaching a window to an existing context
+
+`nativeWindow` above requires the handle up front. When the context already
+exists and a window arrives later — an offscreen renderer that a viewer window
+opens onto — use `attachWindow(handle)` instead:
+
+```js
+const ctx = createWebGL2Context(1920, 1080)   // offscreen; no window yet
+// ... render offscreen, read pixels back, whatever ...
+
+if (ctx.attachWindow(win.native.handle)) {    // now present to a real window
+  ctx.setSwapInterval(0)                      // see the note below
+  ctx.swapBuffers()
+}
+ctx.detachWindow()                            // back to offscreen rendering
+```
+
+This replaces a `glReadPixels` + software-blit round trip with a GPU swap. Read
+pixels back BEFORE swapping: after a swap the back buffer's contents are
+undefined, so a readback then returns a torn or stale frame.
+
+> **Set `setSwapInterval(0)` unless you specifically want to block on vsync.**
+> The driver default is 1, which parks the calling thread inside
+> `swapBuffers()` until the next vblank — measured at ~33 ms/frame, i.e. slower
+> than the CPU round trip you are replacing, and on a single-threaded host it
+> blocks the whole event loop. A window toolkit's own "vsync off" setting does
+> not affect this surface's interval.
 
 On macOS pass `win.native.handle` (an `NSView*`); native-gles resolves it to
 the view's backing `CALayer` for ANGLE's Metal backend and keeps its
