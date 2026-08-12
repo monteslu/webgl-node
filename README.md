@@ -51,6 +51,14 @@ Creates an EGL pbuffer context and returns:
 - `ctxId` — The native-gles context handle backing this context
 - `makeCurrent()` — Make **this** context current before rendering
 - `destroy()` — Destroy this context (and only this one)
+- `resize(width, height)` — Follow a surface size change. `drawingBufferWidth`
+  /`Height` are cached at creation, so after a window resize (or going
+  fullscreen) they still report the ORIGINAL size, and anything sizing a
+  viewport or a blit from them draws into a rect built for the old window.
+  There is no event to hook — the owner of the window has to say so. Updates
+  the cached size, and resizes the underlying pbuffer when the context is
+  offscreen (a window surface tracks its own window, so native-gles treats
+  `resizeContext` as a no-op there).
 - `attachWindow(handle)` — Bind this context to a native window handle, turning
   a pbuffer context into one that presents to that window. Returns `false` if
   the bind is refused (the context is left untouched and still usable
