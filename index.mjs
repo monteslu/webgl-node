@@ -22,6 +22,34 @@ export function createWebGL2Context(width, height, opts = {}) {
   // GL dispatch onto its own context before rendering. destroy() releases
   // this context specifically, never a bystander's.
   result.makeCurrent = gl.makeCurrent ? () => gl.makeCurrent(id) : null
+
+  // ALSO PUT makeCurrent ON THE CONTEXT OBJECT ITSELF.
+  //
+  // Consumers are handed `result.gl` (the WebGL2RenderingContext) and keep
+  // only that -- wasmcart's createWebGLImports takes it as `ctx`, and its
+  // teardown does `ctx.makeCurrent?.()` before deleting the cart's GL
+  // objects. That optional-call silently did NOTHING, because makeCurrent
+  // lived only on the wrapper above. native-gles dispatches every GL call
+  // against ONE process-global current context, and object names are plain
+  // integers with no context identity -- so those deletes ran against
+  // WHOEVER WAS CURRENT and destroyed another context's identically-numbered
+  // textures.
+  //
+  // Measured 2026-08-21: two contexts each allocated GL texture name 3; one
+  // session's cart teardown deleted name 3 while another session's context
+  // was current, killing the live cart's scene target. That window went BLACK
+  // at a healthy 60fps (0x8cd7, attachment GL_NONE) with a human playing in
+  // it, while a CPU readback still showed a perfect picture.
+  //
+  // Non-enumerable so it cannot disturb anything that walks the context.
+  if (result.makeCurrent && !ctx.makeCurrent) {
+    Object.defineProperty(ctx, 'makeCurrent', {
+      value: result.makeCurrent, writable: true, configurable: true, enumerable: false,
+    })
+  }
+  Object.defineProperty(ctx, 'ctxId', {
+    value: id, writable: false, configurable: true, enumerable: false,
+  })
   result.destroy = () => gl.destroyContext(id)
 
   /**

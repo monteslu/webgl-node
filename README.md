@@ -47,7 +47,12 @@ gl.readPixels(0, 0, 800, 600, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 Creates an EGL pbuffer context and returns:
 
 - `canvas` — Mock canvas object compatible with libraries that expect `canvas.getContext('webgl2')`
-- `gl` — Full `WebGL2RenderingContext` instance
+- `gl` — Full `WebGL2RenderingContext` instance. **`makeCurrent()` and
+  `ctxId` are also set on this object** (non-enumerably), because consumers
+  routinely keep only `gl` and throw the wrapper away -- a library that holds
+  `gl` and calls `gl.makeCurrent?.()` before its own GL work needs that call
+  to actually do something. See the multi-context note below for what an
+  unnoticed no-op costs.
 - `ctxId` — The native-gles context handle backing this context
 - `makeCurrent()` — Make **this** context current before rendering
 - `destroy()` — Destroy this context (and only this one)
@@ -159,6 +164,18 @@ When `nativeWindow` (or `windowSurface`) is provided, `createWebGL2Context` also
 - `setSwapInterval(n)` — set vsync (1 = on, 0 = off). On macOS this drives
   `CAMetalLayer.displaySyncEnabled` through native-gles (ANGLE's own
   `eglSwapInterval` is a no-op there).
+
+**Object names are integers with no context identity.** Two contexts each
+allocate texture name 1, 2, 3... independently, and every GL call -- including
+`glDeleteTextures` -- is dispatched against whichever context is *current*.
+So deleting "your" texture 3 while somebody else's context is current
+destroys *their* texture 3. A teardown that means to call `makeCurrent()`
+first and silently does not will corrupt an unrelated context, and the damage
+looks like a rendering bug in the victim: a live window went black at a
+healthy 60fps (`GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT`, attachment
+`GL_NONE`) while a CPU readback of that same cart still showed a perfect
+picture. This is why `makeCurrent` is on the context object and not only on
+the wrapper.
 
 `makeCurrent()` and `destroy()` are returned for every context, window or
 pbuffer — see above.
