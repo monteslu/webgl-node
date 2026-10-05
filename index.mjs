@@ -8,7 +8,13 @@ export function createWebGL2Context(width, height, opts = {}) {
   // context-management call below binds that handle, which is what keeps two
   // consumers in one process — two carts, a cart and a bezel compositor —
   // from silently sharing (and corrupting) a single global context.
-  const id = gl.createContext(width, height, opts)
+  // antialias: true (opt in; omitted or false keeps the plain surface, unlike
+  // a browser, whose default is true) asks native-gles for a 4x multisampled
+  // surface. The driver then resolves it on read and present, as a browser
+  // does an antialiased canvas. A display with no such config gets the plain
+  // one, and getContextAttributes() reports antialias: false.
+  const samples = opts.antialias === true ? 4 : 0
+  const id = gl.createContext(width, height, { ...opts, samples })
   if (!id) throw new Error('webgl-node: failed to create EGL context')
 
   const ctx = new WebGL2RenderingContext(gl, width, height, opts)
