@@ -1,6 +1,6 @@
 {
   "name": "webgl-node",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "WebGL2 implementation for Node.js on top of native-gles",
   "type": "module",
   "main": "index.mjs",
@@ -26,6 +26,6 @@
   "author": "Luis Montes",
   "license": "MIT",
   "dependencies": {
-    "native-gles": "^0.6.0"
+    "native-gles": "^0.7.1"
   }
 }
