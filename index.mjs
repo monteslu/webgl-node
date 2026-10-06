@@ -2,6 +2,51 @@ import gl from 'native-gles'
 import { WebGL2RenderingContext } from './lib/webgl2-context.mjs'
 import { createMockCanvas } from './lib/canvas-mock.mjs'
 
+// WebGL guarantees a new drawing buffer starts at colour 0, depth 1.0 and
+// stencil 0. EGL does not: a fresh pbuffer or window surface holds whatever
+// memory it was given. Colour often reads back as 0, but depth can be garbage,
+// so a depth-tested draw into the default framebuffer that the app never
+// cleared (three.js r186's final full-screen pass, for example) fails per
+// pixel at random. Runs whenever a drawing buffer is (re)created, with this
+// context current, and restores every piece of state it touches.
+function initDrawingBuffer(ctx) {
+  const fb = ctx.getParameter(ctx.DRAW_FRAMEBUFFER_BINDING)
+  const scissor = ctx.isEnabled(ctx.SCISSOR_TEST)
+  const discard = ctx.isEnabled(ctx.RASTERIZER_DISCARD)
+  const color = ctx.getParameter(ctx.COLOR_CLEAR_VALUE)
+  const depth = ctx.getParameter(ctx.DEPTH_CLEAR_VALUE)
+  const stencil = ctx.getParameter(ctx.STENCIL_CLEAR_VALUE)
+  const colorMask = ctx.getParameter(ctx.COLOR_WRITEMASK)
+  const depthMask = ctx.getParameter(ctx.DEPTH_WRITEMASK)
+  const stencilFront = ctx.getParameter(ctx.STENCIL_WRITEMASK)
+  const stencilBack = ctx.getParameter(ctx.STENCIL_BACK_WRITEMASK)
+  ctx.bindFramebuffer(ctx.DRAW_FRAMEBUFFER, null)
+  // Only NONE would stop the clear. (Mesa reports FRONT for a single-buffered
+  // pbuffer, which GLES will not accept back from drawBuffers, so it is left alone.)
+  const drawBufferNone = ctx.getParameter(ctx.DRAW_BUFFER0) === ctx.NONE
+  if (drawBufferNone) ctx.drawBuffers([ctx.BACK])
+  if (scissor) ctx.disable(ctx.SCISSOR_TEST)
+  if (discard) ctx.disable(ctx.RASTERIZER_DISCARD)
+  ctx.clearColor(0, 0, 0, 0)
+  ctx.clearDepth(1)
+  ctx.clearStencil(0)
+  ctx.colorMask(true, true, true, true)
+  ctx.depthMask(true)
+  ctx.stencilMask(0xffffffff)
+  ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT | ctx.STENCIL_BUFFER_BIT)
+  ctx.clearColor(color[0], color[1], color[2], color[3])
+  ctx.clearDepth(depth)
+  ctx.clearStencil(stencil)
+  ctx.colorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3])
+  ctx.depthMask(depthMask)
+  ctx.stencilMaskSeparate(ctx.FRONT, stencilFront)
+  ctx.stencilMaskSeparate(ctx.BACK, stencilBack)
+  if (scissor) ctx.enable(ctx.SCISSOR_TEST)
+  if (discard) ctx.enable(ctx.RASTERIZER_DISCARD)
+  if (drawBufferNone) ctx.drawBuffers([ctx.NONE])
+  ctx.bindFramebuffer(ctx.DRAW_FRAMEBUFFER, fb)
+}
+
 export function createWebGL2Context(width, height, opts = {}) {
   // createContext returns a context HANDLE (an int > 0, so this check still
   // works against older native-gles builds that returned a boolean). Every
@@ -18,6 +63,7 @@ export function createWebGL2Context(width, height, opts = {}) {
   if (!id) throw new Error('webgl-node: failed to create EGL context')
 
   const ctx = new WebGL2RenderingContext(gl, width, height, opts)
+  initDrawingBuffer(ctx)
   const canvas = createMockCanvas(width, height, ctx)
   ctx.canvas = canvas
 
@@ -75,7 +121,8 @@ export function createWebGL2Context(width, height, opts = {}) {
     const w = Math.max(1, width | 0)
     const h = Math.max(1, height | 0)
     if (gl.resizeContext) {
-      try { gl.resizeContext(w, h, id) } catch { /* window surfaces refuse; size cache still updates */ }
+      // A resized pbuffer is a new surface; resizeContext leaves this context current.
+      try { if (gl.resizeContext(w, h, id) !== false) initDrawingBuffer(ctx) } catch { /* window surfaces refuse; size cache still updates */ }
     }
     ctx._width = w
     ctx._height = h
@@ -101,6 +148,8 @@ export function createWebGL2Context(width, height, opts = {}) {
   if (gl.attachWindow) {
     result.attachWindow = (handle) => {
       const ok = gl.attachWindow(handle, id)
+      // The window surface is new and now current.
+      if (ok) initDrawingBuffer(ctx)
       if (ok && !result.swapBuffers) {
         result.swapBuffers = () => gl.swapBuffers(id)
         result.setSwapInterval = gl.setSwapInterval ? (interval) => gl.setSwapInterval(interval, id) : null
