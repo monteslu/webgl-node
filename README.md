@@ -222,6 +222,8 @@ See [`examples/`](examples/) for complete demos using three.js with SDL.
 - `getParameter` returns proper WebGL wrapper objects for binding queries
 - `getUniform` introspects the uniform type to return the correct typed array
 - `texImage2D` and `texSubImage2D` accept the Image/Canvas source form; pixels are read back via the source's `getContext('2d')` (or a temp canvas for an `Image`), so the source must expose a 2D context
+- The default framebuffer starts cleared, as WebGL requires: colour 0, depth 1.0, stencil 0. EGL hands out uninitialized surfaces, so this clear happens when the context is created, after `resize()` and after `attachWindow()`, with your GL state saved and restored around it. Without it a depth-tested draw into a default framebuffer you never cleared fails at random on some GPUs
+- Unlike a browser's default (`preserveDrawingBuffer: false`), the drawing buffer is **not** cleared after each frame: it keeps its contents, and `getContextAttributes()` reports `preserveDrawingBuffer: true`. A program that draws to the canvas without clearing depth sees the previous frame's depth where a browser would see a fresh buffer. Clear the buffers you depend on at the start of each frame
 
 ## License
 
