@@ -794,6 +794,40 @@ console.log('-- vertex attribs --')
   assertEq(gl.getError(), gl.NO_ERROR, 'vertex attrib ops no error')
 }
 
+// ─── Uniform blocks ────────────────────────────────────────────────
+
+console.log('-- uniform blocks --')
+{
+  // 32 uniforms: ACTIVE_UNIFORM_INDICES returns 128 bytes. Queried into a
+  // one-element buffer, as this method once did, that overran the heap and
+  // killed the process later in an unrelated free().
+  const members = Array.from({ length: 32 }, (_, i) => `  float m${i};`).join('\n')
+  const sum = Array.from({ length: 32 }, (_, i) => `m${i}`).join(' + ')
+  const vs = compileShader(gl, gl.VERTEX_SHADER, `#version 300 es
+in vec2 aPos;
+layout(std140) uniform Big {
+${members}
+};
+void main() { gl_Position = vec4(aPos * (${sum}), 0.0, 1.0); }
+`)
+  const fs = compileShader(gl, gl.FRAGMENT_SHADER, FS_RED)
+  const prog = linkProgram(gl, vs, fs)
+  const block = gl.getUniformBlockIndex(prog, 'Big')
+  assert(block !== gl.INVALID_INDEX, 'getUniformBlockIndex finds the block')
+  assertEq(gl.getActiveUniformBlockParameter(prog, block, gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS), 32, 'UNIFORM_BLOCK_ACTIVE_UNIFORMS')
+  const indices = gl.getActiveUniformBlockParameter(prog, block, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)
+  assertEq(indices.length, 32, 'UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES has one entry per uniform')
+  const active = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS)
+  assert([...indices].every(i => i >= 0 && i < active), 'every index names an active uniform')
+  assertEq(new Set(indices).size, 32, 'the indices are distinct')
+  assertEq(gl.getActiveUniformBlockParameter(prog, block, gl.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER), true, 'UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER')
+  // The overrun's victim was a later allocation; churn some so a regression
+  // trips the allocator here rather than in some unrelated test.
+  for (let i = 0; i < 2000; i++) new Int32Array(1 + (i % 7))
+  gl.deleteProgram(prog)
+  assertEq(gl.getError(), gl.NO_ERROR, 'no GL error after uniform block queries')
+}
+
 // ─── Instanced Drawing ─────────────────────────────────────────────
 
 console.log('-- instanced drawing --')
