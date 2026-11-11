@@ -99,7 +99,7 @@ Implements the complete [WebGL 2.0 API](https://developer.mozilla.org/en-US/docs
 - **State**: `getParameter`, `getIndexedParameter`, `isEnabled`, `getError`
 - **Readback**: `readPixels`, `getBufferSubData`
 - **Clear Buffers**: `clearBufferfv`, `clearBufferiv`, `clearBufferuiv`, `clearBufferfi`
-- **Extensions**: `getSupportedExtensions`, `getExtension`
+- **Extensions**: `getSupportedExtensions`, `getExtension`. Compressed-texture extensions are advertised when the driver has them (`WEBGL_compressed_texture_s3tc`, `_s3tc_srgb`, `EXT_texture_compression_bptc`, `EXT_texture_compression_rgtc`, `WEBGL_compressed_texture_astc`) and `WEBGL_compressed_texture_etc` always (ETC2 is core in GLES 3.0); `getExtension` returns each one's format constants, and `compressedTexImage2D/3D` and `compressedTexSubImage2D/3D` upload typed arrays (with `srcOffset` / `srcLengthOverride`).
 
 ### `GL` (constants)
 
