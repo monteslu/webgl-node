@@ -6,14 +6,18 @@ import { createWebGL2Context } from '../index.mjs'
 // three.js r150 and later render through WebGL2 only; the devDependency here is older and treats this
 // context as WebGL1, so it cannot show the compressed path. THREE_MODULE points at a newer build
 // (a file path or URL); without one, and with an old three, the test skips.
-const THREE = await import(process.env.THREE_MODULE ? new URL(process.env.THREE_MODULE, 'file://' + process.cwd() + '/').href : 'three')
+console.log('--- test-compressed-threejs ---')
+let THREE
+try {
+  THREE = await import(process.env.THREE_MODULE ? new URL(process.env.THREE_MODULE, 'file://' + process.cwd() + '/').href : 'three')
+} catch (e) {
+  console.log(`SKIP: three.js is not installed (${e.code || e.message}); npm install --no-save three@0.184.0, or set THREE_MODULE`)
+  process.exit(0)
+}
 if (Number(THREE.REVISION) < 150) {
-  console.log('--- test-compressed-threejs ---')
   console.log(`SKIP: three r${THREE.REVISION} predates WebGL2-only rendering; set THREE_MODULE to a three r150 or later build`)
   process.exit(0)
 }
-
-console.log('--- test-compressed-threejs ---')
 
 const { canvas, gl } = createWebGL2Context(1, 1)
 const renderer = new THREE.WebGLRenderer({ canvas, context: gl })
