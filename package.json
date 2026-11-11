@@ -27,5 +27,8 @@
   "license": "MIT",
   "dependencies": {
     "native-gles": "^0.7.1"
+  },
+  "devDependencies": {
+    "three": "^0.184.0"
   }
 }

@@ -3,20 +3,19 @@
 // with compressedTex*, and samples it), not just the raw context calls.
 import { createWebGL2Context } from '../index.mjs'
 
-// three.js r150 and later render through WebGL2 only; the devDependency here is older and treats this
-// context as WebGL1, so it cannot show the compressed path. THREE_MODULE points at a newer build
-// (a file path or URL); without one, and with an old three, the test skips.
+// three.js r150 and later render through WebGL2 only, so this needs a recent three (a devDependency).
+// THREE_MODULE overrides the import (a file path or URL) to try another build.
 console.log('--- test-compressed-threejs ---')
 let THREE
 try {
   THREE = await import(process.env.THREE_MODULE ? new URL(process.env.THREE_MODULE, 'file://' + process.cwd() + '/').href : 'three')
 } catch (e) {
-  console.log(`SKIP: three.js is not installed (${e.code || e.message}); npm install --no-save three@0.184.0, or set THREE_MODULE`)
-  process.exit(0)
+  console.log(`FAIL: three.js could not be imported (${e.code || e.message}); run npm install`)
+  process.exit(1)
 }
 if (Number(THREE.REVISION) < 150) {
-  console.log(`SKIP: three r${THREE.REVISION} predates WebGL2-only rendering; set THREE_MODULE to a three r150 or later build`)
-  process.exit(0)
+  console.log(`FAIL: three r${THREE.REVISION} predates WebGL2-only rendering; this test needs r150 or later`)
+  process.exit(1)
 }
 
 const { canvas, gl } = createWebGL2Context(1, 1)
