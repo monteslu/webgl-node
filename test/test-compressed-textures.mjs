@@ -39,6 +39,16 @@ for (const [nativeName, webName, constants] of expectations) {
     check(gl.getExtension(webName) === null, `${webName} is not returned by getExtension`)
   }
 }
+{
+  // WEBGL_compressed_texture_astc is the one extension object with a method (the WebGL spec): getSupportedProfiles()
+  const astc = gl.getExtension('WEBGL_compressed_texture_astc')
+  if (native.includes('GL_KHR_texture_compression_astc_ldr')) {
+    const profiles = astc && typeof astc.getSupportedProfiles === 'function' ? astc.getSupportedProfiles() : null
+    check(Array.isArray(profiles) && profiles.includes('ldr'), 'getSupportedProfiles() returns an array that includes ldr')
+    check(Array.isArray(profiles) && profiles.includes('hdr') === native.includes('GL_KHR_texture_compression_astc_hdr'),
+      "getSupportedProfiles() lists hdr exactly when the driver has GL_KHR_texture_compression_astc_hdr")
+  }
+}
 check(supported.includes('WEBGL_compressed_texture_etc'), 'WEBGL_compressed_texture_etc is always advertised (ETC2 is core in GLES 3.0)')
 const etc = gl.getExtension('WEBGL_compressed_texture_etc')
 check(!!etc && etc.COMPRESSED_RGB8_ETC2 === 0x9274 && etc.COMPRESSED_RGBA8_ETC2_EAC === 0x9278 && etc.COMPRESSED_R11_EAC === 0x9270,
