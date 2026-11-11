@@ -23,9 +23,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install system dependencies
+        # the runner's mirrors sometimes fail to resolve for minutes: retry the index and the fetches
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libegl1-mesa libgles2-mesa
+          for i in 1 2 3 4; do sudo apt-get update -o Acquire::Retries=3 && break; sleep 20; done
+          sudo apt-get install -y -o Acquire::Retries=3 libegl1-mesa libgles2-mesa
 
       - name: Install dependencies
         run: npm install
@@ -35,5 +36,7 @@ jobs:
           node test/test-triangle.mjs
           node test/test-all.mjs
           node test/test-drawing-buffer.mjs
+          node test/test-compressed-textures.mjs
+          node test/test-compressed-threejs.mjs
         env:
           EGL_PLATFORM: surfaceless

@@ -8,7 +8,7 @@
     ".": "./index.mjs"
   },
   "scripts": {
-    "test": "node test/test-triangle.mjs && node test/test-all.mjs && node test/test-drawing-buffer.mjs && node test/test-window-attach.mjs"
+    "test": "node test/test-triangle.mjs && node test/test-all.mjs && node test/test-drawing-buffer.mjs && node test/test-window-attach.mjs && node test/test-compressed-textures.mjs && node test/test-compressed-threejs.mjs"
   },
   "repository": {
     "type": "git",
@@ -27,5 +27,8 @@
   "license": "MIT",
   "dependencies": {
     "native-gles": "^0.7.1"
+  },
+  "devDependencies": {
+    "three": "^0.184.0"
   }
 }
