@@ -35,5 +35,7 @@ jobs:
           node test/test-triangle.mjs
           node test/test-all.mjs
           node test/test-drawing-buffer.mjs
+          node test/test-compressed-textures.mjs
+          node test/test-compressed-threejs.mjs
         env:
           EGL_PLATFORM: surfaceless
